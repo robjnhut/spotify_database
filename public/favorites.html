@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Favorite Songs</title>
+    <link rel="stylesheet" href="/css/favorites.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Favorite Songs</h1>
+      <a href="/" id="backLink">Back to Playlists</a>
+      <div id="favorites"></div>
+    </div>
+    <script>
+      // Lấy access_token từ localStorage và thêm vào link quay về
+      const accessToken = localStorage.getItem("access_token");
+      const backLink = document.getElementById("backLink");
+      if (accessToken) {
+        backLink.href = `/?access_token=${accessToken}`;
+      }
+
+      function loadFavorites() {
+        fetch("/favorites")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Data from /favorites:", data);
+            const favoritesDiv = document.getElementById("favorites");
+            favoritesDiv.innerHTML = "";
+            if (data.length > 0) {
+              data.forEach((song) => {
+                const songElement = document.createElement("div");
+                songElement.className = "song-item";
+                const name = song.NAME || song.name || "Unknown Track";
+                const artist = song.ARTIST || song.artist || "Unknown Artist";
+                const preview_url = song.PREVIEW_URL || song.preview_url || "";
+                const image_url = song.IMAGE_URL || song.image_url || "";
+                const id = song.ID || song.id;
+                songElement.innerHTML = `
+                                   ${
+                                     image_url
+                                       ? `<img src="${image_url}" alt="Album Art">`
+                                       : ""
+                                   }
+                                   <div class="song-info">
+                                       <span>${name} by ${artist}</span>
+                                   </div>
+                                   ${
+                                     preview_url
+                                       ? `<audio controls src="${preview_url}"></audio>`
+                                       : "<span>No preview available</span>"
+                                   }
+                                   <button class="delete-btn" onclick="deleteTrack('${id}')">Delete</button>
+                               `;
+                favoritesDiv.appendChild(songElement);
+              });
+            } else {
+              favoritesDiv.innerHTML =
+                '<p class="error">No favorite songs found</p>';
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            document.getElementById("favorites").innerHTML =
+              '<p class="error">Error loading favorites</p>';
+          });
+      }
+
+      function deleteTrack(id) {
+        fetch("/delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        })
+          .then((response) => response.text())
+          .then((data) => {
+            alert(data);
+            loadFavorites();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Error deleting track");
+          });
+      }
+
+      loadFavorites();
+    </script>
+  </body>
+</html>

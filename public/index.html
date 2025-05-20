@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Playlist Viewer</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Spotify Playlist Viewer</h1>
+      <button id="loginButton" onclick="window.location.href='/login'">
+        Login with Spotify
+      </button>
+      <div style="margin-top: 20px">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search for a song..."
+        />
+        <button onclick="searchTracks()">Search</button>
+      </div>
+      <div id="searchResults"></div>
+      <div id="favoritesLink" style="margin-top: 20px">
+        <a href="/favorites.html">View Favorite Songs</a>
+      </div>
+      <div id="playlists"></div>
+    </div>
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      let accessToken = urlParams.get("access_token");
+
+      // Nếu có access_token từ URL, lưu vào localStorage
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+      } else {
+        // Nếu không có trong URL, lấy từ localStorage
+        accessToken = localStorage.getItem("access_token");
+      }
+
+      const searchResultsDiv = document.getElementById("searchResults");
+      const playlistsDiv = document.getElementById("playlists");
+      const loginButton = document.getElementById("loginButton");
+      const favoritesLink = document.getElementById("favoritesLink");
+
+      if (accessToken) {
+        // Ẩn nút login và hiển thị link favorites nếu đã đăng nhập
+        loginButton.style.display = "none";
+        favoritesLink.style.display = "block";
+
+        // Load playlists
+        fetch(`/playlists?access_token=${accessToken}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.items && data.items.length > 0) {
+              data.items.forEach((playlist) => {
+                const playlistElement = document.createElement("div");
+                playlistElement.className = "playlist-item";
+                playlistElement.innerHTML = `<strong>${playlist.name}</strong> (ID: ${playlist.id})`;
+                playlistsDiv.appendChild(playlistElement);
+              });
+            } else {
+              playlistsDiv.innerHTML =
+                '<p class="error">No playlists found</p>';
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            playlistsDiv.innerHTML =
+              '<p class="error">Error loading playlists</p>';
+          });
+
+        function searchTracks() {
+          const query = document.getElementById("searchInput").value;
+          if (!query) {
+            searchResultsDiv.innerHTML =
+              '<p class="error">Please enter a search query</p>';
+            return;
+          }
+          fetch(
+            `/search?access_token=${accessToken}&q=${encodeURIComponent(query)}`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              searchResultsDiv.innerHTML = "";
+              if (data.tracks && data.tracks.items.length > 0) {
+                data.tracks.items.forEach((track) => {
+                  const trackElement = document.createElement("div");
+                  trackElement.className = "track-item";
+                  const artist = track.artists.map((a) => a.name).join(", ");
+                  const imageUrl =
+                    track.album.images.length > 0
+                      ? track.album.images[0].url
+                      : "";
+                  trackElement.innerHTML = `
+                    ${imageUrl ? `<img src="${imageUrl}" alt="Album Art">` : ""}
+                    <div class="track-info">
+                        <span>${track.name} by ${artist}</span>
+                    </div>
+                    <button onclick="saveTrack('${
+                      track.id
+                    }', '${track.name.replace(/'/g, "\\'")}', '${artist.replace(
+                    /'/g,
+                    "\\'"
+                  )}', '${
+                    track.preview_url || ""
+                  }', '${imageUrl}')">Save</button>
+                `;
+                  searchResultsDiv.appendChild(trackElement);
+                });
+              } else {
+                searchResultsDiv.innerHTML =
+                  '<p class="error">No tracks found</p>';
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              searchResultsDiv.innerHTML =
+                '<p class="error">Error searching tracks</p>';
+            });
+        }
+
+        function saveTrack(id, name, artist, preview_url, image_url) {
+          fetch("/save", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id, name, artist, preview_url, image_url }),
+          })
+            .then((response) => response.text())
+            .then((data) => {
+              alert(data);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("Error saving track");
+            });
+        }
+      } else {
+        // Ẩn link favorites khi chưa đăng nhập
+        favoritesLink.style.display = "none";
+        searchResultsDiv.innerHTML = "<p>Please login to search for songs</p>";
+        playlistsDiv.innerHTML = "<p>Please login to see your playlists</p>";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+body {
+  font-family: "Arial", sans-serif;
+  background: linear-gradient(135deg, #191414, #1db954);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.song-item {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.song-item:hover {
+  transform: translateX(10px);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.song-item img {
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
+  margin-right: 15px;
+}
+
+.song-info {
+  flex: 1;
+  text-align: left;
+}
+
+audio {
+  width: 200px;
+  margin-left: 10px;
+}
+
+.delete-btn {
+  background-color: #ff4d4d;
+  border: none;
+  padding: 8px 15px;
+  color: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.delete-btn:hover {
+  background-color: #e63939;
+}
+
+.error {
+  color: #ff4d4d;
+  margin-top: 20px;
+}
+
+a {
+  color: #1db954;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
